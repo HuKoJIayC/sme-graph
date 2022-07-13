@@ -1,0 +1,7 @@
+/.idea/
+/app/
+*.iml
+/target/
+/out/
+environment.json
+.DS_Store
