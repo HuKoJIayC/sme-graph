@@ -1,6 +1,7 @@
 package com.github.hukojiayc.sme.graph;
 
 import com.github.hukojiayc.sme.graph.handler.GraphHandler;
+import com.github.hukojiayc.sme.graph.handler.LoginHandler;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -30,7 +31,8 @@ public class Server {
       throw new RuntimeException("Critical error starting server on port" + port);
     }
     httpServer.setExecutor(threadPoolExecutor);
-    httpServer.createContext("/graph", new GraphHandler());
+    GraphHandler graphHandler = new GraphHandler();
+    httpServer.createContext(graphHandler.getPath(), graphHandler);
   }
 
   public static synchronized Server getInstance() {

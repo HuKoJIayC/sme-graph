@@ -1,4 +1,4 @@
-package com.github.hukojiayc.sme.graph;
+package com.github.hukojiayc.sme.graph.utils;
 
 public class ApplicationUtils {
 

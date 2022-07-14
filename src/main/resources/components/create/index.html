@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Создание</title>
+  <style>
+        * {
+            font-family: sans-serif;
+            font-size: 12pt;
+        }
+
+        .container {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 15px;
+            box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+            border-radius: 10px;
+            text-align: center;
+        }
+  </style>
+  <script type="text/javascript">
+        function validate() {
+            if (dateStart.value) {
+                return true
+            }
+            return false;
+        }
+  </script>
+</head>
+
+<body>
+<div class="container">
+<!--  <form action="/graph/new" method="get">-->
+  <form onsubmit="return validate()" method="post">
+    <p>Создание полевого визита</p>
+    <label for="dateStart">с </label>
+    <input type="date" name="dateStart" id="dateStart"/>
+    <label for="dateEnd"> по </label>
+    <input type="date" name="dateEnd" id="dateEnd"/>
+    <br/>
+    <label for="tb">ТБ </label>
+    <select name="tb" id="tb">
+      <option value="mb" selected>МБ</option>
+      <option value="vvb">ВВБ</option>
+      <option value="srb">СРБ</option>
+    </select>
+    <select name="osb" id="osb">
+      <option value="osb9042" selected>9042 Тестовый ГОСБ</option>
+      <option value="osb9044">9044</option>
+      <option value="srb">СРБ</option>
+    </select>
+    <p>Территориальные директоры</p>
+    <textarea name="directors" id="directors"></textarea>
+    <p>Лидеры кластеров</p>
+    <textarea name="leaders" id="leaders"></textarea>
+    <div>
+      <input type="button" onclick="location.href='{}'" value="Отмена"/>
+      <input type="submit" value="Создать"/>
+    </div>
+  </form>
+</div>
+
+</body>
+
+</html>
