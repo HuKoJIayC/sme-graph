@@ -22,17 +22,29 @@
   </style>
   <script type="text/javascript">
         function validate() {
-            if (dateStart.value) {
-                return true
+            if (!dateStart.value) {
+                alert("Не указана дата начала визита");
+                return false;
+            } else if (!dateEnd.value) {
+                alert("Не указана дата окончания визита");
+                return false;
+            } else if (!tb.value) {
+                alert("Не выбран территориальный банк");
+                return false;
+            } else if (!osb.value) {
+                alert("Не выбрано отделение сбербанка");
+                return false;
+            } else if (!directors.value) {
+                alert("Не добавлен ни один территориальный директор");
+                return false;
             }
-            return false;
+            return true;
         }
   </script>
 </head>
 
 <body>
 <div class="container">
-<!--  <form action="/graph/new" method="get">-->
   <form onsubmit="return validate()" method="post">
     <p>Создание полевого визита</p>
     <label for="dateStart">с </label>
@@ -41,20 +53,12 @@
     <input type="date" name="dateEnd" id="dateEnd"/>
     <br/>
     <label for="tb">ТБ </label>
-    <select name="tb" id="tb">
-      <option value="mb" selected>МБ</option>
-      <option value="vvb">ВВБ</option>
-      <option value="srb">СРБ</option>
-    </select>
-    <select name="osb" id="osb">
-      <option value="osb9042" selected>9042 Тестовый ГОСБ</option>
-      <option value="osb9044">9044</option>
-      <option value="srb">СРБ</option>
-    </select>
+    <select name="tb" id="tb">{}</select>
+    <select name="osb" id="osb">{}</select>
     <p>Территориальные директоры</p>
-    <textarea name="directors" id="directors"></textarea>
+    <textarea name="directors" id="directors">{}</textarea>
     <p>Лидеры кластеров</p>
-    <textarea name="leaders" id="leaders"></textarea>
+    <textarea name="leaders" id="leaders">{}</textarea>
     <div>
       <input type="button" onclick="location.href='{}'" value="Отмена"/>
       <input type="submit" value="Создать"/>

@@ -2,6 +2,7 @@ package com.github.hukojiayc.sme.graph.handler;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 
+import com.github.hukojiayc.sme.graph.Graph;
 import com.github.hukojiayc.sme.graph.dto.Components;
 import com.github.hukojiayc.sme.graph.dto.Components.CreateType;
 import com.github.hukojiayc.sme.graph.dto.OsbType;
@@ -10,14 +11,18 @@ import com.github.hukojiayc.sme.graph.dto.TbType;
 import com.github.hukojiayc.sme.graph.dto.VisitInfo;
 import com.github.hukojiayc.sme.graph.utils.ServerUtils;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Date;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 
@@ -25,6 +30,7 @@ import org.apache.http.HttpStatus;
 public class GraphHandler extends BaseHttp {
 
   private final String path = "/graph";
+  private final Graph graph = Graph.getInstance();
 
   @Override
   public void handle(HttpExchange exchange) throws IOException {
@@ -37,15 +43,19 @@ public class GraphHandler extends BaseHttp {
     if (exchange.getRequestURI().getPath().indexOf(path + "/create") == 0) {
       if ("POST".equals(exchange.getRequestMethod())) {
         Optional<String> requestBody = ServerUtils.getRequestBody(exchange.getRequestBody());
-        if (requestBody.isPresent()) {
-          // todo adding visit
-        }
+        requestBody.ifPresent(this::addVisitInfoFromForm);
         exchange.getResponseHeaders().add("Location", "http://localhost:5050" + path);
         exchange.sendResponseHeaders(301, 0);
         exchange.close();
         return;
       }
-      responseText = CreateType.index.getValue(path);
+      responseText = CreateType.index.getValue(
+          TbType.getOptions(),
+          OsbType.getOptions(),
+          "Иван Пупкин", // todo
+          "",
+          path
+      );
     } else if (!"GET".equals(exchange.getRequestMethod())) {
       log.warn("Method {} not allowed", exchange.getRequestMethod());
       exchange.sendResponseHeaders(HttpStatus.SC_METHOD_NOT_ALLOWED, 0);
@@ -66,26 +76,7 @@ public class GraphHandler extends BaseHttp {
       // todo check token
       RoleType role = RoleType.creator;
 
-      // todo test
-      VisitInfo info = new VisitInfo();
-      info.setDateStart(new Date());
-      info.setDateEnd(new Date(16161661613L));
-      info.setTb(TbType.vvb);
-      info.setOsb(OsbType.osb9042);
-      info.setDirectors(List.of("Елена Ленина", "Мария Мариева"));
-//      info.setLeaders(List.of("Иван Иванов"));
-      info.setLeaders(List.of("Иван Иванов", Components.ViewType.leader.getValue("Пётр Петров")));
-      List<VisitInfo> list = new ArrayList<>();
-      list.add(info);
-      list.add(info);
-      list.add(info);
-      list.add(info);
-      list.add(info);
-      list.add(info);
-      list.add(info);
-      list.add(info);
-
-      responseText = createHtml(list, role);
+      responseText = createHtml(graph.getVisitInfoList(), role);
     }
 
     exchange.getResponseHeaders().set("Content-type", "text/html; charset=utf-8");
@@ -95,6 +86,43 @@ public class GraphHandler extends BaseHttp {
     exchange.sendResponseHeaders(HTTP_OK, bytes.length);
     exchange.getResponseBody().write(bytes);
     exchange.close();
+  }
+
+  @SneakyThrows
+  private void addVisitInfoFromForm(String info) {
+    System.out.println();
+    String[] args = info.split("&");
+    // adding in map
+    Map<String, String> data = new HashMap<>();
+    for (String arg : args) {
+      int index = arg.indexOf("=");
+      if (index < 0) {
+        continue;
+      }
+      String key = arg.substring(0, index);
+      String value = arg.substring(index + 1);
+      data.put(key, value);
+    }
+    // creating object
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    VisitInfo visitInfo = VisitInfo.builder()
+        .dateStart(simpleDateFormat.parse(data.get("dateStart")))
+        .dateEnd(simpleDateFormat.parse(data.get("dateEnd")))
+        .tb(TbType.valueOf(data.get("tb")))
+        .osb(OsbType.valueOf(data.get("osb")))
+        .directors(
+            Arrays.asList(
+                URLDecoder.decode(data.get("directors"), Charset.defaultCharset()).split(",")
+            )
+        )
+        .leaders(
+            Arrays.asList(
+                URLDecoder.decode(data.get("leaders"), Charset.defaultCharset()).split(",")
+            )
+        )
+        .build();
+    // adding in list
+    graph.addToListInfoVisit(visitInfo);
   }
 
   private String createHtml(
@@ -107,8 +135,8 @@ public class GraphHandler extends BaseHttp {
           Components.ViewType.widget.getValue(
               visitInfo.getMonth(),
               visitInfo.getBetween(),
-              visitInfo.getTb().getValue(),
-              visitInfo.getOsb().getValue(),
+              visitInfo.getTb().getShortName(),
+              visitInfo.getOsb().getCity(),
               String.join(", ", visitInfo.getDirectors()),
               String.join(", ", visitInfo.getLeaders())
           )

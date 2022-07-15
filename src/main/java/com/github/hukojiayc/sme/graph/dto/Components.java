@@ -23,7 +23,8 @@ public class Components {
   }
 
   public enum CreateType {
-    index(ResourceUtils.getFileAsString("components/create/index.html").orElseThrow());
+    index(ResourceUtils.getFileAsString("components/create/index.html").orElseThrow()),
+    option(ResourceUtils.getFileAsString("components/create/option.html").orElseThrow());
 
     private final String value;
 

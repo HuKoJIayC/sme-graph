@@ -33,6 +33,7 @@ public class Server {
     httpServer.setExecutor(threadPoolExecutor);
     GraphHandler graphHandler = new GraphHandler();
     httpServer.createContext(graphHandler.getPath(), graphHandler);
+    httpServer.createContext("/login", new LoginHandler());
   }
 
   public static synchronized Server getInstance() {
