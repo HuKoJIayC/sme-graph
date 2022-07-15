@@ -44,7 +44,7 @@ public class GraphHandler extends BaseHttp {
       if ("POST".equals(exchange.getRequestMethod())) {
         Optional<String> requestBody = ServerUtils.getRequestBody(exchange.getRequestBody());
         requestBody.ifPresent(this::addVisitInfoFromForm);
-        exchange.getResponseHeaders().add("Location", "http://localhost:5050" + path);
+        exchange.getResponseHeaders().add("Location", path);
         exchange.sendResponseHeaders(301, 0);
         exchange.close();
         return;
@@ -67,7 +67,7 @@ public class GraphHandler extends BaseHttp {
           "Set-Cookie",
           List.of("ID=" + exchange.getRequestURI().getPath().substring(7) + ";")
       );
-      exchange.getResponseHeaders().add("Location", "http://localhost:5050" + path);
+      exchange.getResponseHeaders().add("Location", path);
       exchange.sendResponseHeaders(301, 0);
       exchange.close();
       return;
