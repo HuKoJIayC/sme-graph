@@ -1,7 +1,8 @@
 package com.github.hukojiayc.sme.graph;
 
 import com.github.hukojiayc.sme.graph.dto.DatabaseConstant;
-import com.github.hukojiayc.sme.graph.dto.DatabaseSqlType;
+import com.github.hukojiayc.sme.graph.dto.SqlTables.Users;
+import com.github.hukojiayc.sme.graph.dto.SqlTables.Visits;
 import com.github.hukojiayc.sme.graph.utils.ApplicationUtils;
 import java.io.File;
 import java.io.IOException;
@@ -49,8 +50,8 @@ public class Database {
       throw new RuntimeException();
     }
     log.debug("Creating tables");
-    execute(DatabaseSqlType.usersCreateTable.getSql());
-    execute(DatabaseSqlType.visitsCreateTable.getSql());
+    execute(Users.create.getSql());
+    execute(Visits.create.getSql());
     log.debug("Closing test connection");
     if (!closeConnection(connection.get())) {
       throw new RuntimeException();

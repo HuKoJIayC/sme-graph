@@ -1,8 +1,9 @@
 package com.github.hukojiayc.sme.graph;
 
-import com.github.hukojiayc.sme.graph.dto.DatabaseSqlType;
 import com.github.hukojiayc.sme.graph.dto.OsbType;
 import com.github.hukojiayc.sme.graph.dto.RoleType;
+import com.github.hukojiayc.sme.graph.dto.SqlTables.Users;
+import com.github.hukojiayc.sme.graph.dto.SqlTables.Visits;
 import com.github.hukojiayc.sme.graph.dto.TbType;
 import com.github.hukojiayc.sme.graph.dto.User;
 import com.github.hukojiayc.sme.graph.dto.Visit;
@@ -50,7 +51,7 @@ public class Graph {
   public synchronized void addVisit(Visit visit) {
     log.info("Adding visit {} in database", visit.getId());
     database.execute(
-        DatabaseSqlType.visitsAdd.getSql(
+        Visits.add.getSql(
             visit.getDateStart().getTime(),
             visit.getDateEnd().getTime(),
             visit.getTb().name(),
@@ -69,7 +70,7 @@ public class Graph {
   }
 
   private void readUsersFromDatabase() {
-    List<Map<String, Object>> list = database.select(DatabaseSqlType.usersGet.getSql());
+    List<Map<String, Object>> list = database.select(Users.get.getSql());
     for (Map<String, Object> map : list) {
       users.add(convertMapToUser(map));
     }
@@ -77,7 +78,7 @@ public class Graph {
 
   private void readVisitsFromDatabase() {
     log.info("Reading visits from database");
-    List<Map<String, Object>> list = database.select(DatabaseSqlType.visitsGet.getSql());
+    List<Map<String, Object>> list = database.select(Visits.get.getSql());
     for (Map<String, Object> map : list) {
       visits.add(
           Visit.builder()
@@ -104,7 +105,7 @@ public class Graph {
     }
     String[] ids = usersId.split(",");
     for (String id : ids) {
-      List<Map<String, Object>> users = database.select(DatabaseSqlType.usersGetById.getSql(id));
+      List<Map<String, Object>> users = database.select(Users.getById.getSql(id));
       if (users.size() == 0) {
         continue;
       }

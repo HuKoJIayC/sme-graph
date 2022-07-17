@@ -1,8 +1,8 @@
 package com.github.hukojiayc.sme.graph;
 
-import com.github.hukojiayc.sme.graph.dto.DatabaseSqlType;
 import com.github.hukojiayc.sme.graph.dto.OsbType;
 import com.github.hukojiayc.sme.graph.dto.RoleType;
+import com.github.hukojiayc.sme.graph.dto.SqlTables.Users;
 import com.github.hukojiayc.sme.graph.dto.TbType;
 import com.github.hukojiayc.sme.graph.dto.Visit;
 import java.util.Date;
@@ -16,30 +16,30 @@ public class Application {
     Database.getInstance();
     Server.getInstance();
   }
-  
+
   private static void createTestData() {
     Database database = Database.getInstance();
     // adding users
     database.execute(
-        DatabaseSqlType.usersAdd.getSql(
+        Users.add.getSql(
             1,
             RoleType.creator.name(),
             "Елена Ленина",
             1
         ),
-        DatabaseSqlType.usersAdd.getSql(
+        Users.add.getSql(
             2,
             RoleType.creator.name(),
             "Мария Мариева",
             1
         ),
-        DatabaseSqlType.usersAdd.getSql(
+        Users.add.getSql(
             3,
             RoleType.viewer.name(),
             "Иван Иванов",
             1
         ),
-        DatabaseSqlType.usersAdd.getSql(
+        Users.add.getSql(
             4,
             RoleType.viewer.name(),
             "Пётр Петров",
