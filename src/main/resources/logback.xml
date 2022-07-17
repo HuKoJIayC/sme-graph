@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <property name="logDir" value="/home/sme-graph/logs"/>
+  <property name="logArchive" value="${logDir}/archive"/>
+  <property name="logRolling" value="rolling.log"/>
+  <property name="logJson" value="jsonRoll.log.json"/>
+  <timestamp key="mainTime" datePattern="yyyy-MM-dd_HH-mm"/>
+  <property name="logLevel" value="DEBUG"/>
+
+  <appender name="cnsl" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <charset>UTF-8</charset>
+      <pattern>
+        %d{yyyy-MM-dd HH-mm-ss} [%t{10}] [%level] \(%logger{10}.%M\): %msg%n
+      </pattern>
+    </encoder>
+  </appender>
+
+  <appender name="rolling" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${logDir}/${logRolling}</file>
+    <encoder>
+      <charset>UTF-8</charset>
+      <pattern>%d{ISO8601} [%t] [%level] [%C::%M:%L] mdc:[%mdc]: %m%n</pattern>
+    </encoder>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <FileNamePattern>${logArchive}/%i-%d{yyyy-MM-dd}-${logRolling}.zip</FileNamePattern>
+      <maxHistory>30</maxHistory>
+      <maxFileSize>5MB</maxFileSize>
+      <totalSizeCap>10MB</totalSizeCap>
+    </rollingPolicy>
+  </appender>
+
+  <appender name="asyncRol" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="rolling"/>
+  </appender>
+
+  <root level="${logLevel}" addictivity="false">
+    <appender-ref ref="asyncRol"/>
+    <appender-ref ref="cnsl"/>
+  </root>
+
+</configuration>
