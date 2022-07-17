@@ -13,6 +13,7 @@ public class Application {
 
   public static void main(String[] args) {
     createTestData();
+    Database.getInstance();
     Server.getInstance();
   }
   
