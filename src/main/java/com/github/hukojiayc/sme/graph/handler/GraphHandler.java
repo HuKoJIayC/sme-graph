@@ -89,7 +89,7 @@ public class GraphHandler extends BaseHttp {
       return;
     } else {
 
-      responseText = createHtml(graph.getVisitList(), user5);
+      responseText = createHtml(graph.getVisits(), user5);
     }
 
     exchange.getResponseHeaders().set("Content-type", "text/html; charset=utf-8");
@@ -137,7 +137,7 @@ public class GraphHandler extends BaseHttp {
 //        )
         .build();
     // adding in list
-    graph.addToListVisit(visit);
+    graph.addVisit(visit);
   }
 
   private String createHtml(List<Visit> visitList, User user) {

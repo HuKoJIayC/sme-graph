@@ -32,7 +32,7 @@ public class Database {
 
   private Date currentDate = null;
 
-  public Database() {
+  private Database() {
     log.info("Initialization database");
     log.debug("Getting jdbc driver");
     try {

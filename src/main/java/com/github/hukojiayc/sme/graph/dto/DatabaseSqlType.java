@@ -5,13 +5,29 @@ import com.github.hukojiayc.sme.graph.utils.ApplicationUtils;
 public enum DatabaseSqlType {
   usersCreateTable(""
       + "CREATE TABLE IF NOT EXISTS users (\n"
-      + "    id INTEGER PRIMARY KEY,\n"
+      + "    telegram_id INTEGER PRIMARY KEY,\n"
       + "    token TEXT,\n"
       + "    role TEXT,\n"
       + "    full_name TEXT,\n"
       + "    is_active INTEGER\n"
       + ");"
   ),
+  usersAdd(""
+      + "INSERT OR IGNORE INTO users (\n"
+      + "    telegram_id,\n"
+      + "    role,\n"
+      + "    full_name,\n"
+      + "    is_active\n"
+      + ") VALUES (\n"
+      + "    {},\n"
+      + "    '{}',\n"
+      + "    '{}',\n"
+      + "    {}\n"
+      + ");"
+  ),
+  usersGet("SELECT * FROM users"),
+  usersGetById("SELECT * FROM users WHERE telegram_id={}"),
+  usersGetByToken("SELECT * FROM users WHERE token={}"),
   visitsCreateTable(""
       + "CREATE TABLE IF NOT EXISTS visits (\n"
       + "    id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
@@ -19,13 +35,40 @@ public enum DatabaseSqlType {
       + "    date_end INTEGER,\n"
       + "    tb TEXT,\n"
       + "    osb TEXT,\n"
-      + "    directors TEXT,\n"
-      + "    leaders TEXT,\n"
-      + "    leaders_on_confirmation TEXT,\n"
-      + "    creator INTEGER NOT NULL,\n"
-      + "    FOREIGN KEY (creator) REFERENCES users(id)\n"
+      + "    directors_id TEXT,\n"
+      + "    leaders_id TEXT,\n"
+      + "    leaders_id_on_confirmation TEXT,\n"
+      + "    creator_id INTEGER NOT NULL,\n"
+      + "    creation_date INTEGER NOT NULL,\n"
+      + "    FOREIGN KEY (creator_id) REFERENCES users(telegram_id)\n"
       + ");"
   ),
+  visitsGet("SELECT * FROM visits"),
+  visitsAdd(""
+      + "INSERT INTO visits (\n"
+      + "    date_start,\n"
+      + "    date_end,\n"
+      + "    tb,\n"
+      + "    osb,\n"
+      + "    directors_id,\n"
+      + "    leaders_id,\n"
+      + "    leaders_id_on_confirmation,\n"
+      + "    creator_id,\n"
+      + "    creation_date\n"
+      + ") VALUES (\n"
+      + "    {},\n"
+      + "    {},\n"
+      + "    '{}',\n"
+      + "    '{}',\n"
+      + "    '{}',\n"
+      + "    '{}',\n"
+      + "    '{}',\n"
+      + "    {},\n"
+      + "    {}\n"
+      + ");"),
+
+
+
 
   /*
 
