@@ -1,10 +1,11 @@
 package com.github.hukojiayc.sme.graph.handler;
 
 import static java.net.HttpURLConnection.HTTP_OK;
+import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 
 import com.github.hukojiayc.sme.graph.Graph;
-import com.github.hukojiayc.sme.graph.dto.Components;
 import com.github.hukojiayc.sme.graph.dto.Components.CreateType;
+import com.github.hukojiayc.sme.graph.dto.Components.ViewType;
 import com.github.hukojiayc.sme.graph.dto.OsbType;
 import com.github.hukojiayc.sme.graph.dto.RoleType;
 import com.github.hukojiayc.sme.graph.dto.TbType;
@@ -20,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
@@ -33,67 +33,81 @@ public class GraphHandler extends BaseHttp {
 
   @Override
   public void handle(HttpExchange exchange) throws IOException {
-    log.info(
-        "Incoming request method {} by URL {}",
-        exchange.getRequestMethod(),
-        exchange.getRequestURI().getPath()
+    exchange.getResponseHeaders().put(
+        "Cache-Control",
+        List.of("no-cache", "no-store", "must-revalidate")
     );
-    // todo Токен задаётся при создании меню с переходом в график и добавляется в базу
-    if (exchange.getRequestURI().getPath().contains(path + "/login/")) {
-      // set token and redirect
-      exchange.getResponseHeaders().put(
-          "Set-Cookie",
-          List.of("token=" + exchange.getRequestURI().getPath().substring(13) + ";")
-      );
-      exchange.getResponseHeaders().add("Location", path);
-      exchange.sendResponseHeaders(301, 0);
+    String uri = exchange.getRequestURI().getPath();
+    log.info("Incoming request method {} by URL {}", exchange.getRequestMethod(), uri);
+    if (!uri.contains(path + "/")) {
+      exchange.sendResponseHeaders(HTTP_UNAUTHORIZED, 0);
       exchange.close();
       return;
     }
-    // todo check token from cookies in db
-    User user5 = User.builder()
-        .id(5L)
-        .fullName("Иван Пупкин")
-        .role(RoleType.creator)
-        .build();
-    // todo else unauthorized
-
-    String responseText;
-    if (exchange.getRequestURI().getPath().indexOf(path + "/join") == 0) {
-      // todo logic
-//      graph.getVisitList().stream().filter(visit ->)
-      exchange.getResponseHeaders().add("Location", path);
-      exchange.sendResponseHeaders(301, 0);
+    String token = uri.substring((path + "/").length());
+    if (token.contains("/")) {
+      token = token.substring(0, token.indexOf("/"));
+    }
+    // todo Токен задаётся при создании меню с переходом в график и добавляется в базу
+//    if (exchange.getRequestURI().getPath().contains(path + "/login/")) {
+//      // set token and redirect
+//      exchange.getResponseHeaders().put(
+//          "Set-Cookie",
+//          List.of("TOKEN=" + exchange.getRequestURI().getPath().substring((path + "/login/").length()) + ";")
+//      );
+//      exchange.getResponseHeaders().add("Location", path);
+//      exchange.sendResponseHeaders(301, 0);
+//      exchange.close();
+//      return;
+//    }
+//    Optional<User> user = HeaderUtils.getUserByHeaders(exchange.getRequestHeaders());
+    Optional<User> user = graph.getUserByToken(token);
+    if (user.isEmpty()) {
+      exchange.sendResponseHeaders(403, 0);
       exchange.close();
       return;
-    } else if (exchange.getRequestURI().getPath().indexOf(path + "/create") == 0) {
+    }
+    // localhost:5050/graph/login/35b42934-0c25-4fc8-9195-585fe0e25ad3
+    String responseText;
+    if (uri.indexOf(path + "/" + token + "/join/") == 0) {
+      long id = Long.parseLong(uri.substring((path + "/" + token + "/join/").length()));
+      graph.updateVisit(id, user.get());
+      exchange.getResponseHeaders().add("Location", path + "/" + token);
+      exchange.sendResponseHeaders(301, 0);
+      exchange.close();
+    } else if (uri.indexOf(path + "/" + token + "/create") == 0) {
       if ("POST".equals(exchange.getRequestMethod())) {
         Optional<String> requestBody = ServerUtils.getRequestBody(exchange.getRequestBody());
         requestBody.ifPresent(this::addVisitInfoFromForm);
-        exchange.getResponseHeaders().add("Location", path);
+        exchange.getResponseHeaders().add("Location", path + "/" + token);
         exchange.sendResponseHeaders(301, 0);
         exchange.close();
-        return;
+      } else {
+        // todo create
+        sendResponse(
+            exchange,
+            CreateType.index.getValue(
+                TbType.getOptions(),
+                OsbType.getOptions(),
+                "Иван Пупкин", // todo
+                "",
+                path + "/" + token
+            )
+        );
       }
-      responseText = CreateType.index.getValue(
-          TbType.getOptions(),
-          OsbType.getOptions(),
-          "Иван Пупкин", // todo
-          "",
-          path
-      );
     } else if (!"GET".equals(exchange.getRequestMethod())) {
       log.warn("Method {} not allowed", exchange.getRequestMethod());
       exchange.sendResponseHeaders(HttpStatus.SC_METHOD_NOT_ALLOWED, 0);
       exchange.close();
-      return;
     } else {
-
-      responseText = createHtml(graph.getVisits(), user5);
+      sendResponse(exchange, createViewHtml(graph.getVisits(), user.get()));
     }
+  }
 
+  @SneakyThrows
+  private void sendResponse(HttpExchange exchange, String html) {
     exchange.getResponseHeaders().set("Content-type", "text/html; charset=utf-8");
-    ByteBuffer buffer = StandardCharsets.UTF_8.encode(responseText);
+    ByteBuffer buffer = StandardCharsets.UTF_8.encode(html);
     byte[] bytes = new byte[buffer.remaining()];
     buffer.get(bytes);
     exchange.sendResponseHeaders(HTTP_OK, bytes.length);
@@ -118,12 +132,12 @@ public class GraphHandler extends BaseHttp {
     }
     // creating object
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-    Visit visit = Visit.builder()
-        .id(UUID.randomUUID().toString())
-        .dateStart(simpleDateFormat.parse(data.get("dateStart")))
-        .dateEnd(simpleDateFormat.parse(data.get("dateEnd")))
-        .tb(TbType.valueOf(data.get("tb")))
-        .osb(OsbType.valueOf(data.get("osb")))
+//    Visit visit = Visit.builder()
+//        .id(UUID.randomUUID().toString())
+//        .dateStart(simpleDateFormat.parse(data.get("dateStart")))
+//        .dateEnd(simpleDateFormat.parse(data.get("dateEnd")))
+//        .tb(TbType.valueOf(data.get("tb")))
+//        .osb(OsbType.valueOf(data.get("osb")))
 // todo
 //        .directors(
 //            Arrays.asList(
@@ -135,12 +149,12 @@ public class GraphHandler extends BaseHttp {
 //                URLDecoder.decode(data.get("leaders"), Charset.defaultCharset()).split(",")
 //            )
 //        )
-        .build();
+//        .build();
     // adding in list
-    graph.addVisit(visit);
+//    graph.addVisit(visit);
   }
 
-  private String createHtml(List<Visit> visitList, User user) {
+  private String createViewHtml(List<Visit> visitList, User user) {
     StringBuilder widgets = new StringBuilder();
     for (Visit visit : visitList) {
       StringBuilder leaders = new StringBuilder(
@@ -156,7 +170,8 @@ public class GraphHandler extends BaseHttp {
         );
       }
       widgets.append(
-          Components.ViewType.widget.getValue(
+          ViewType.widget.getValue(
+              visit.getId(),
               visit.getMonth(),
               visit.getBetween(),
               visit.getTb().getShortName(),
@@ -167,12 +182,25 @@ public class GraphHandler extends BaseHttp {
       );
     }
     if (user.getRole() == RoleType.creator) {
-      widgets.append(Components.ViewType.add.getValue(path));
+      widgets.append(
+          ViewType.add.getValue(path + "/" + user.getToken() + "/create")
+      );
     }
-    return Components.ViewType.index.getValue(
-        user.getId(),
+    return ViewType.index.getValue(
         user.getRole() == RoleType.creator ? "director" : "leader",
+        user.getFullName(),
+        user.getToken(),
         widgets.toString()
+    );
+  }
+
+  private String createChangeHtml(List<Visit> visitList, User user) {
+    return CreateType.index.getValue(
+        TbType.getOptions(),
+        OsbType.getOptions(),
+        "Иван Пупкин", // todo
+        "",
+        path + "/" + user.getToken()
     );
   }
 

@@ -19,7 +19,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Visit {
 
-  private String id;
+  private long id;
   private Date dateStart;
   private Date dateEnd;
   private TbType tb;
@@ -53,26 +53,4 @@ public class Visit {
         .map(user -> ViewType.leader.getValue(user.getFullName()))
         .collect(Collectors.toList());
   }
-
-//  public void setDirectors(List<String> directors) {
-//    if (directors == null) {
-//      return;
-//    } else if (this.directors == null) {
-//      this.directors = new ArrayList<>();
-//    }
-//    for (int i = 0; i < directors.size(); i++) {
-//      this.directors.add(directors.get(i).trim());
-//    }
-//  }
-//
-//  public void setLeaders(List<String> leaders) {
-//    if (leaders == null) {
-//      return;
-//    } else if (this.leaders == null) {
-//      this.leaders = new ArrayList<>();
-//    }
-//    for (int i = 0; i < leaders.size(); i++) {
-//      this.leaders.add(i, leaders.get(i).trim());
-//    }
-//  }
 }

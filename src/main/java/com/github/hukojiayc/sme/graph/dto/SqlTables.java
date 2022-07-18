@@ -29,7 +29,7 @@ public class SqlTables {
     ),
     get("SELECT * FROM users"),
     getById("SELECT * FROM users WHERE telegram_id={}"),
-    getByToken("SELECT * FROM users WHERE token={}");
+    getByToken("SELECT * FROM users WHERE token='{}'");
 
     private final String sql;
 
@@ -84,7 +84,8 @@ public class SqlTables {
         + "    '{}',\n"
         + "    {},\n"
         + "    {}\n"
-        + ");");
+        + ");"),
+    update("UPDATE visits SET {} = '{}' WHERE id = {};");
 
     private final String sql;
 

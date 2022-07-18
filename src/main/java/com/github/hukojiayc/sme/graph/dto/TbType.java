@@ -3,10 +3,10 @@ package com.github.hukojiayc.sme.graph.dto;
 import com.github.hukojiayc.sme.graph.dto.Components.CreateType;
 
 public enum TbType {
+  tb038("МБ", "Московский банк"),
   tb013("ЦЧБ", "Центрально-Черноземный банк"),
   tb016("УБ", "Уральский банк"),
   tb018("ББ", "Байкальский банк"),
-  tb038("МБ", "Московский банк"),
   tb040("СРБ", "Среднерусский банк"),
   tb042("ВВБ", "Волго-Вятский банк"),
   tb044("СИБ", "Сибирский банк"),

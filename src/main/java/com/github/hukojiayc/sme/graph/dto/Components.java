@@ -24,7 +24,8 @@ public class Components {
 
   public enum CreateType {
     index(ResourceUtils.getFileAsString("components/create/index.html").orElseThrow()),
-    option(ResourceUtils.getFileAsString("components/create/option.html").orElseThrow());
+    option(ResourceUtils.getFileAsString("components/create/option.html").orElseThrow()),
+    checkbox(ResourceUtils.getFileAsString("components/create/checkbox.html").orElseThrow());
 
     private final String value;
 

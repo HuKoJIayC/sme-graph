@@ -90,9 +90,8 @@
 
 
   <script type="text/javascript">
-      var name = "{}";
       function join(e) {
-          let isContainsName = e.querySelector(".{}-data").textContent.indexOf(name) > -1;
+          let isContainsName = e.querySelector(".{}-data").textContent.indexOf('{}') > -1;
           let confirmText = 'Присоединиться к полевому визиту?';
           if (isContainsName) {
               confirmText = 'Отменить участие?';
@@ -100,7 +99,7 @@
           if (!confirm(confirmText)) {
               return;
           }
-          location.href = '/graph/join/' + name;
+          location.href = '/graph/{}/join/' + e.id;
       }
   </script>
 </head>
