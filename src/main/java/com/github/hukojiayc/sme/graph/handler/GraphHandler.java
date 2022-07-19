@@ -49,27 +49,11 @@ public class GraphHandler extends BaseHttp {
       token = token.substring(0, token.indexOf("/"));
     }
     // todo Токен задаётся при создании меню с переходом в график и добавляется в базу
-//    if (exchange.getRequestURI().getPath().contains(path + "/login/")) {
-//      // set token and redirect
-//      exchange.getResponseHeaders().put(
-//          "Set-Cookie",
-//          List.of("TOKEN=" + exchange.getRequestURI().getPath().substring((path + "/login/").length()) + ";")
-//      );
-//      exchange.getResponseHeaders().add("Location", path);
-//      exchange.sendResponseHeaders(301, 0);
-//      exchange.close();
-//      return;
-//    }
-//    Optional<User> user = HeaderUtils.getUserByHeaders(exchange.getRequestHeaders());
     Optional<User> user = graph.getUserByToken(token);
     if (user.isEmpty()) {
       exchange.sendResponseHeaders(403, 0);
       exchange.close();
-      return;
-    }
-    // localhost:5050/graph/login/35b42934-0c25-4fc8-9195-585fe0e25ad3
-    String responseText;
-    if (uri.indexOf(path + "/" + token + "/join/") == 0) {
+    } else if (uri.indexOf(path + "/" + token + "/join/") == 0) {
       long id = Long.parseLong(uri.substring((path + "/" + token + "/join/").length()));
       graph.updateVisit(id, user.get());
       exchange.getResponseHeaders().add("Location", path + "/" + token);
@@ -83,17 +67,7 @@ public class GraphHandler extends BaseHttp {
         exchange.sendResponseHeaders(301, 0);
         exchange.close();
       } else {
-        // todo create
-        sendResponse(
-            exchange,
-            CreateType.index.getValue(
-                TbType.getOptions(),
-                OsbType.getOptions(),
-                "Иван Пупкин", // todo
-                "",
-                path + "/" + token
-            )
-        );
+        sendResponse(exchange, createChangeHtml(user.get()));
       }
     } else if (!"GET".equals(exchange.getRequestMethod())) {
       log.warn("Method {} not allowed", exchange.getRequestMethod());
@@ -194,12 +168,26 @@ public class GraphHandler extends BaseHttp {
     );
   }
 
-  private String createChangeHtml(List<Visit> visitList, User user) {
+  private String createChangeHtml(User user) {
+    StringBuilder directors = new StringBuilder();
+    StringBuilder leaders = new StringBuilder();
+    for (User user1 : graph.getUsers()) {
+      String checkbox = CreateType.checkbox.getValue(
+          user1.getId(),
+          user1.getId().equals(user.getId()) ? "checked" : "",
+          user1.getFullName()
+      );
+      if (user1.getRole() == RoleType.creator) {
+        directors.append(checkbox);
+      } else {
+        leaders.append(checkbox);
+      }
+    }
     return CreateType.index.getValue(
         TbType.getOptions(),
         OsbType.getOptions(),
-        "Иван Пупкин", // todo
-        "",
+        directors,
+        leaders,
         path + "/" + user.getToken()
     );
   }

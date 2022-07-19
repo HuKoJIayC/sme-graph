@@ -40,10 +40,30 @@
             }
             return true;
         }
+
+        function filterOsb() {
+            let osbList = osb.getElementsByTagName('option');
+            console.log(osbList);
+            if (osbList.length == 0) {
+                return;
+            }
+            let isSelected = false;
+            for (let i = 0; i < osbList.length; i++) {
+                if (osbList[i].value.indexOf(tb.value.replace('tb', 'osb')) == 0) {
+                    osbList[i].style.display = 'inline';
+                    if (!isSelected) {
+                        osb.value = osbList[i].value;
+                        isSelected = true;
+                    }
+                } else {
+                    osbList[i].style.display = 'none';
+                }
+            }
+        }
   </script>
 </head>
 
-<body>
+<body onload="filterOsb()">
 <div class="container">
   <form onsubmit="return validate()" method="post">
     <p>Создание полевого визита</p>
@@ -53,12 +73,12 @@
     <input type="date" name="dateEnd" id="dateEnd"/>
     <br/>
     <label for="tb">ТБ </label>
-    <select name="tb" id="tb">{}</select>
+    <select name="tb" id="tb" onchange="filterOsb()">{}</select>
     <select name="osb" id="osb">{}</select>
     <p>Территориальные директоры</p>
-    <textarea name="directors" id="directors">{}</textarea>
+    {}
     <p>Лидеры кластеров</p>
-    <textarea name="leaders" id="leaders">{}</textarea>
+    {}
     <div>
       <input type="button" onclick="location.href='{}'" value="Отмена"/>
       <input type="submit" value="Создать"/>
