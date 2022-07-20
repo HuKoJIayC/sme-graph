@@ -4,14 +4,13 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
 import java.util.List;
-import org.apache.http.HttpStatus;
 
 public class LoginHandler implements HttpHandler {
 
   @Override
   public void handle(HttpExchange exchange) throws IOException {
     if (!"GET".equals(exchange.getRequestMethod())) {
-      exchange.sendResponseHeaders(HttpStatus.SC_METHOD_NOT_ALLOWED, 0);
+      exchange.sendResponseHeaders(405, 0);
       exchange.close();
     }
     exchange.getResponseHeaders().put(

@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
+  <meta name="viewport" content="height=device-height">
   <title>Создание</title>
   <style>
         * {
@@ -12,38 +13,67 @@
         }
 
         .container {
-            background: #f5f5f5;
+            background: #f2f3f4;
             padding: 15px;
             margin: 15px;
             box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
             border-radius: 10px;
             text-align: center;
+            height: 90vh;
+        }
+
+        a {
+            text-decoration: none;
+            display: inline-block;
+            padding: 8px 16px;
+        }
+
+        a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        #previousButton {
+            background-color: #b62222;
+            color: #fff;
+            border-radius: 5px;
+            position: absolute;
+            bottom: 7vh;
+            left: 40px;
+        }
+
+        #nextButton {
+            background-color: #04AA6D;
+            color: white;
+            border-radius: 5px;
+            position: absolute;
+            bottom: 7vh;
+            right: 40px;
         }
   </style>
   <script type="text/javascript">
-        function validate() {
-            if (!dateStart.value) {
-                alert("Не указана дата начала визита");
-                return false;
-            } else if (!dateEnd.value) {
-                alert("Не указана дата окончания визита");
-                return false;
-            } else if (!tb.value) {
-                alert("Не выбран территориальный банк");
-                return false;
-            } else if (!osb.value) {
-                alert("Не выбрано отделение сбербанка");
-                return false;
-            } else if (!directors.value) {
-                alert("Не добавлен ни один территориальный директор");
-                return false;
-            }
-            return true;
-        }
+        // function validate() {
+        //     if (!dateStart.value) {
+        //         alert("Не указана дата начала визита");
+        //         return false;
+        //     } else if (!dateEnd.value) {
+        //         alert("Не указана дата окончания визита");
+        //         return false;
+        //     } else if (!tb.value) {
+        //         alert("Не выбран территориальный банк");
+        //         return false;
+        //     } else if (!osb.value) {
+        //         alert("Не выбрано отделение сбербанка");
+        //         return false;
+        //     } else if (!directors.value) {
+        //         alert("Не добавлен ни один территориальный директор");
+        //         return false;
+        //     }
+        //     return true;
+        // }
 
         function filterOsb() {
             let osbList = osb.getElementsByTagName('option');
-            console.log(osbList);
             if (osbList.length == 0) {
                 return;
             }
@@ -60,28 +90,100 @@
                 }
             }
         }
+
+        function next(id) {
+            // get this page id
+            let i;
+            for (i = 1; i < 5; i++) {
+                if (document.getElementById("page" + i).style.display == 'inline') {
+                    thisPageIdNumber = i;
+                    break;
+                }
+            }
+            // validating
+            if (id > 0) {
+                switch (i) {
+                    case 1:
+                        if (!dateStart.value) {
+                            alert("Не указана дата начала визита");
+                            return;
+                        } else if (!dateEnd.value) {
+                            alert("Не указана дата окончания визита");
+                            return;
+                        }
+                        break;
+                    case 2:
+                        if (!tb.value) {
+                            alert("Не выбран территориальный банк");
+                            return;
+                        } else if (!osb.value) {
+                            alert("Не выбрано отделение сбербанка");
+                            return;
+                        }
+                        break;
+                    case 3:
+                    // if (!directors.value) {
+                    //     alert("Не добавлен ни один территориальный директор");
+                    //     return;
+                    // }
+                }
+            }
+            // go to next page
+            if (i + id == 0) {
+                location.href = location.href.substring(0, location.href.indexOf("/create"));
+            } else if (i + id == 5) {
+                document.getElementById('form').submit();
+                // location.href = location.href.substring(0, location.href.indexOf("/create"));
+            } else {
+                document.getElementById('page' + i).style.display = 'none';
+                document.getElementById('page' + (i + id)).style.display = 'inline';
+                if (i + id == 1) { // todo refactoring color to class
+                    previousButton.innerText = 'Отмена';
+                    previousButton.style.backgroundColor = '#b62222';
+                    previousButton.style.color = '#fff';
+                } else {
+                    previousButton.innerText = '‹ Назад';
+                    previousButton.style.backgroundColor = '#f1f1f1';
+                    previousButton.style.color = '#000';
+                }
+                if (i + id == 4) { // todo refactoring color to class
+                    nextButton.innerText = 'Создать';
+                    nextButton.style.backgroundColor = '#2e26c5';
+                } else {
+                    nextButton.innerText = 'Далее ›';
+                    nextButton.style.backgroundColor = '#04AA6D';
+                }
+            }
+        }
   </script>
 </head>
 
 <body onload="filterOsb()">
 <div class="container">
-  <form onsubmit="return validate()" method="post">
-    <p>Создание полевого визита</p>
-    <label for="dateStart">с </label>
-    <input type="date" name="dateStart" id="dateStart"/>
-    <label for="dateEnd"> по </label>
-    <input type="date" name="dateEnd" id="dateEnd"/>
-    <br/>
-    <label for="tb">ТБ </label>
-    <select name="tb" id="tb" onchange="filterOsb()">{}</select>
-    <select name="osb" id="osb">{}</select>
-    <p>Территориальные директоры</p>
-    {}
-    <p>Лидеры кластеров</p>
-    {}
+  <form id="form" method="post">
+    <div id="page1" style="display: inline;">
+      <p>Создание полевого визита</p>
+      <label for="dateStart">с </label>
+      <input type="date" name="dateStart" id="dateStart"/>
+      <label for="dateEnd"> по </label>
+      <input type="date" name="dateEnd" id="dateEnd"/>
+    </div>
+    <div id="page2" style="display: none;">
+      <label for="tb">ТБ </label>
+      <select name="tb" id="tb" onchange="filterOsb()">{}</select>
+      <select name="osb" id="osb">{}</select>
+    </div>
+    <div id="page3" style="display: none;">
+      <p>Участники от тер.дирекции</p>
+      {}
+    </div>
+    <div id="page4" style="display: none;">
+      <p>Участники от кластеров</p>
+      {}
+    </div>
     <div>
-      <input type="button" onclick="location.href='{}'" value="Отмена"/>
-      <input type="submit" value="Создать"/>
+      <a href="#" id="previousButton" onclick="next(-1)">Отмена</a>
+      <a href="#" id="nextButton" onclick="next(1)">Далее &#8250;</a>
     </div>
   </form>
 </div>

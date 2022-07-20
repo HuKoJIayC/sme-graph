@@ -1,7 +1,6 @@
 package com.github.hukojiayc.sme.graph.handler;
 
 import static java.net.HttpURLConnection.HTTP_OK;
-import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 
 import com.github.hukojiayc.sme.graph.Graph;
 import com.github.hukojiayc.sme.graph.dto.Components.CreateType;
@@ -21,9 +20,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpStatus;
 
 @Slf4j
 public class GraphHandler extends BaseHttp {
@@ -40,7 +40,7 @@ public class GraphHandler extends BaseHttp {
     String uri = exchange.getRequestURI().getPath();
     log.info("Incoming request method {} by URL {}", exchange.getRequestMethod(), uri);
     if (!uri.contains(path + "/")) {
-      exchange.sendResponseHeaders(HTTP_UNAUTHORIZED, 0);
+      exchange.sendResponseHeaders(401, 0);
       exchange.close();
       return;
     }
@@ -54,7 +54,7 @@ public class GraphHandler extends BaseHttp {
       exchange.sendResponseHeaders(403, 0);
       exchange.close();
     } else if (uri.indexOf(path + "/" + token + "/join/") == 0) {
-      long id = Long.parseLong(uri.substring((path + "/" + token + "/join/").length()));
+      String id = uri.substring((path + "/" + token + "/join/").length());
       graph.updateVisit(id, user.get());
       exchange.getResponseHeaders().add("Location", path + "/" + token);
       exchange.sendResponseHeaders(301, 0);
@@ -62,7 +62,9 @@ public class GraphHandler extends BaseHttp {
     } else if (uri.indexOf(path + "/" + token + "/create") == 0) {
       if ("POST".equals(exchange.getRequestMethod())) {
         Optional<String> requestBody = ServerUtils.getRequestBody(exchange.getRequestBody());
-        requestBody.ifPresent(this::addVisitInfoFromForm);
+        if (requestBody.isPresent()) {
+          addVisitInfoFromForm(requestBody.get(), token);
+        }
         exchange.getResponseHeaders().add("Location", path + "/" + token);
         exchange.sendResponseHeaders(301, 0);
         exchange.close();
@@ -71,7 +73,7 @@ public class GraphHandler extends BaseHttp {
       }
     } else if (!"GET".equals(exchange.getRequestMethod())) {
       log.warn("Method {} not allowed", exchange.getRequestMethod());
-      exchange.sendResponseHeaders(HttpStatus.SC_METHOD_NOT_ALLOWED, 0);
+      exchange.sendResponseHeaders(405, 0);
       exchange.close();
     } else {
       sendResponse(exchange, createViewHtml(graph.getVisits(), user.get()));
@@ -90,7 +92,7 @@ public class GraphHandler extends BaseHttp {
   }
 
   @SneakyThrows
-  private void addVisitInfoFromForm(String info) {
+  private void addVisitInfoFromForm(String info, String token) {
     System.out.println();
     String[] args = info.split("&");
     // adding in map
@@ -106,26 +108,38 @@ public class GraphHandler extends BaseHttp {
     }
     // creating object
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-//    Visit visit = Visit.builder()
-//        .id(UUID.randomUUID().toString())
-//        .dateStart(simpleDateFormat.parse(data.get("dateStart")))
-//        .dateEnd(simpleDateFormat.parse(data.get("dateEnd")))
-//        .tb(TbType.valueOf(data.get("tb")))
-//        .osb(OsbType.valueOf(data.get("osb")))
-// todo
-//        .directors(
-//            Arrays.asList(
-//                URLDecoder.decode(data.get("directors"), Charset.defaultCharset()).split(",")
-//            )
-//        )
-//        .leaders(
-//            Arrays.asList(
-//                URLDecoder.decode(data.get("leaders"), Charset.defaultCharset()).split(",")
-//            )
-//        )
-//        .build();
+    Visit visit = Visit.builder()
+        .id(UUID.randomUUID().toString())
+        .dateStart(simpleDateFormat.parse(data.get("dateStart")))
+        .dateEnd(simpleDateFormat.parse(data.get("dateEnd")))
+        .tb(TbType.valueOf(data.get("tb")))
+        .osb(OsbType.valueOf(data.get("osb")))
+        .creator(graph.getUserByToken(token).orElseThrow())
+        .directors( // todo тянент из базы!!!
+            graph.getUsersFromStringDatabase(
+                data.entrySet().stream()
+                    .filter(stringStringEntry ->
+                        stringStringEntry.getKey().indexOf(RoleType.creator.name()) == 0
+                            && stringStringEntry.getValue().equals("on"))
+                    .map(stringStringEntry -> stringStringEntry.getKey()
+                        .replace(RoleType.creator.name() + "_", ""))
+                    .collect(Collectors.joining(","))
+            )
+        )
+        .leaders( // todo тянент из базы!!!
+            graph.getUsersFromStringDatabase(
+                data.entrySet().stream()
+                    .filter(stringStringEntry ->
+                        stringStringEntry.getKey().indexOf(RoleType.viewer.name()) == 0
+                            && stringStringEntry.getValue().equals("on"))
+                    .map(stringStringEntry -> stringStringEntry.getKey()
+                        .replace(RoleType.viewer.name() + "_", ""))
+                    .collect(Collectors.joining(","))
+            )
+        )
+        .build();
     // adding in list
-//    graph.addVisit(visit);
+    graph.addVisit(visit);
   }
 
   private String createViewHtml(List<Visit> visitList, User user) {
@@ -173,6 +187,7 @@ public class GraphHandler extends BaseHttp {
     StringBuilder leaders = new StringBuilder();
     for (User user1 : graph.getUsers()) {
       String checkbox = CreateType.checkbox.getValue(
+          user1.getRole().name(),
           user1.getId(),
           user1.getId().equals(user.getId()) ? "checked" : "",
           user1.getFullName()

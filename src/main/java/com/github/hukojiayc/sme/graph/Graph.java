@@ -53,16 +53,23 @@ public class Graph {
     log.info("Adding visit {} in database", visit.getId());
     database.execute(
         Visits.add.getSql(
+            visit.getId(),
             visit.getDateStart().getTime(),
             visit.getDateEnd().getTime(),
             visit.getTb().name(),
             visit.getOsb().name(),
-            visit.getDirectors().stream()
-                .map(user -> user.getId().toString()).collect(Collectors.joining(",")),
-            visit.getLeaders().stream()
-                .map(user -> user.getId().toString()).collect(Collectors.joining(",")),
-            visit.getLeadersOnConfirmation().stream()
-                .map(user -> user.getId().toString()).collect(Collectors.joining(",")),
+            visit.getDirectors() == null || visit.getDirectors().size() == 0
+                ? ""
+                : visit.getDirectors().stream()
+                    .map(user -> user.getId().toString()).collect(Collectors.joining(",")),
+            visit.getLeaders() == null || visit.getLeaders().size() == 0
+                ? ""
+                : visit.getLeaders().stream()
+                    .map(user -> user.getId().toString()).collect(Collectors.joining(",")),
+            visit.getLeadersOnConfirmation() == null || visit.getLeadersOnConfirmation().size() == 0
+                ? ""
+                : visit.getLeadersOnConfirmation().stream()
+                    .map(user -> user.getId().toString()).collect(Collectors.joining(",")),
             visit.getCreator().getId(),
             new Date().getTime()
         )
@@ -83,7 +90,7 @@ public class Graph {
     for (Map<String, Object> map : list) {
       visits.add(
           Visit.builder()
-              .id((long) map.get("id"))
+              .id(map.get("id").toString())
               .dateStart(new Date((long) map.get("date_start")))
               .dateEnd(new Date((long) map.get("date_end")))
               .tb(TbType.valueOf(map.get("tb").toString()))
@@ -99,7 +106,8 @@ public class Graph {
     }
   }
 
-  private List<User> getUsersFromStringDatabase(String usersId) {
+  public List<User> getUsersFromStringDatabase(
+      String usersId) { // TODO Получить из текущих пользователей
     List<User> list = new ArrayList<>();
     if (usersId == null || usersId.length() == 0) {
       return list;
@@ -134,7 +142,7 @@ public class Graph {
     return Optional.of(user);
   }
 
-  public void updateVisit(long id, User user) {
+  public void updateVisit(String id, User user) {
     log.debug(
         "Updating user list in visit {} for user {} role {} in local variables",
         id,
@@ -142,7 +150,7 @@ public class Graph {
         user.getRole()
     );
     List<Visit> visits = getVisits().stream()
-        .filter(visit -> visit.getId() == id)
+        .filter(visit -> visit.getId().equals(id))
         .collect(Collectors.toList());
     if (visits.size() == 0) {
       return;
@@ -161,7 +169,8 @@ public class Graph {
       fieldName = "leaders_id_on_confirmation";
     }
     if (users.stream().anyMatch(user1 -> user1.getId().equals(user.getId()))) {
-      log.debug("Removing user {} from list {} in visit {}", user.getId(), fieldName, visit.getId());
+      log.debug("Removing user {} from list {} in visit {}", user.getId(), fieldName,
+          visit.getId());
       for (int i = 0; i < users.size(); i++) {
         if (users.get(i).getId().equals(user.getId())) {
           users.remove(i);

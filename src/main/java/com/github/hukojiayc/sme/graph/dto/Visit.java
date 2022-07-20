@@ -19,7 +19,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Visit {
 
-  private long id;
+  private String id;
   private Date dateStart;
   private Date dateEnd;
   private TbType tb;

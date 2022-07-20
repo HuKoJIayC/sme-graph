@@ -49,7 +49,7 @@ public class SqlTables {
   public enum Visits {
     create(""
         + "CREATE TABLE IF NOT EXISTS visits (\n"
-        + "    id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+        + "    id TEXT PRIMARY KEY,\n"
         + "    date_start INTEGER,\n"
         + "    date_end INTEGER,\n"
         + "    tb TEXT,\n"
@@ -65,6 +65,7 @@ public class SqlTables {
     get("SELECT * FROM visits"),
     add(""
         + "INSERT INTO visits (\n"
+        + "    id,\n"
         + "    date_start,\n"
         + "    date_end,\n"
         + "    tb,\n"
@@ -75,6 +76,7 @@ public class SqlTables {
         + "    creator_id,\n"
         + "    creation_date\n"
         + ") VALUES (\n"
+        + "    '{}',\n"
         + "    {},\n"
         + "    {},\n"
         + "    '{}',\n"
@@ -85,7 +87,7 @@ public class SqlTables {
         + "    {},\n"
         + "    {}\n"
         + ");"),
-    update("UPDATE visits SET {} = '{}' WHERE id = {};");
+    update("UPDATE visits SET {} = '{}' WHERE id = '{}';");
 
     private final String sql;
 
